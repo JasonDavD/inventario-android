@@ -9,7 +9,7 @@ class AppConfig : Application() {
     companion object {
         lateinit var CONTEXTO: Context
         lateinit var BD: InitBD
-        const val BASE_URL = "https://tu-app.onrender.com/"
+        const val BASE_URL = "https://ferreteria-zamora-api.onrender.com/"
     }
 
     override fun onCreate() {
