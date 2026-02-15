@@ -9,8 +9,16 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.button.MaterialButton
 import pe.com.cibertec.inventarioferreteriazamora.R
+import pe.com.cibertec.inventarioferreteriazamora.controller.ControllerProducto
+import pe.com.cibertec.inventarioferreteriazamora.modelos.Producto
+import pe.com.cibertec.inventarioferreteriazamora.utils.ApiUtils
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class MainActivity : AppCompatActivity() {
+
+    private val controller = ControllerProducto()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,7 +45,54 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnSync.setOnClickListener {
-            Toast.makeText(this, "Sincronizacion pendiente de configurar", Toast.LENGTH_SHORT).show()
+            sincronizar()
+        }
+    }
+
+    private fun sincronizar() {
+        val pendientes = controller.listarPendientes()
+
+        if (pendientes.isEmpty()) {
+            Toast.makeText(this, "No hay productos pendientes de sincronizar", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        Toast.makeText(this, "Sincronizando ${pendientes.size} producto(s)...", Toast.LENGTH_SHORT).show()
+
+        val api = ApiUtils.getAPIProducto()
+        var sincronizados = 0
+        var errores = 0
+
+        for (producto in pendientes) {
+            val call = api.crearProducto(producto)
+            call.enqueue(object : Callback<Producto> {
+                override fun onResponse(call: Call<Producto>, response: Response<Producto>) {
+                    if (response.isSuccessful) {
+                        controller.marcarSincronizado(producto.cod)
+                        sincronizados++
+                    } else {
+                        errores++
+                    }
+                    verificarFin(pendientes.size, sincronizados, errores)
+                }
+
+                override fun onFailure(call: Call<Producto>, t: Throwable) {
+                    errores++
+                    verificarFin(pendientes.size, sincronizados, errores)
+                }
+            })
+        }
+    }
+
+    private fun verificarFin(total: Int, sincronizados: Int, errores: Int) {
+        if (sincronizados + errores == total) {
+            runOnUiThread {
+                if (errores == 0) {
+                    Toast.makeText(this, "Sincronizacion exitosa: $sincronizados producto(s)", Toast.LENGTH_LONG).show()
+                } else {
+                    Toast.makeText(this, "Sincronizados: $sincronizados, Errores: $errores", Toast.LENGTH_LONG).show()
+                }
+            }
         }
     }
 }

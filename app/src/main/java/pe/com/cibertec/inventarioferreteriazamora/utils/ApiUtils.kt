@@ -1,16 +1,13 @@
 package pe.com.cibertec.inventarioferreteriazamora.utils
-import kotlin.jvm.java
 
+import pe.com.cibertec.inventarioferreteriazamora.service.ApiProducto
 
 class ApiUtils {
 
     companion object {
-        val BASE_URL=""
-        /*
-        fun getAPIMedicamento(): ApiMedicamento {
-            return RetrofitClient.getClient(BASE_URL).create(ApiMedicamento::class.java)
+        fun getAPIProducto(): ApiProducto {
+            return RetrofitClient.getClient(AppConfig.BASE_URL)
+                .create(ApiProducto::class.java)
         }
-
-         */
     }
 }
