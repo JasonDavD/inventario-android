@@ -6,7 +6,7 @@ import pe.com.cibertec.inventarioferreteriazamora.utils.AppConfig
 
 class InitBD : SQLiteOpenHelper(
     AppConfig.CONTEXTO,
-    "inventarioZamora.bd", null, 1
+    "inventarioZamora.bd", null, 2
 ) {
 
     override fun onCreate(db: SQLiteDatabase?) {
@@ -17,14 +17,16 @@ class InitBD : SQLiteOpenHelper(
                 categoria TEXT,
                 precio REAL NOT NULL,
                 stock INTEGER NOT NULL,
-                estado_sync INTEGER DEFAULT 0
+                estado_sync INTEGER DEFAULT 0,
+                id_api INTEGER DEFAULT 0
             )
         """.trimIndent()
         db?.execSQL(sql)
     }
 
     override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
-        db?.execSQL("DROP TABLE IF EXISTS tb_producto")
-        onCreate(db)
+        if (oldVersion < 2) {
+            db?.execSQL("ALTER TABLE tb_producto ADD COLUMN id_api INTEGER DEFAULT 0")
+        }
     }
 }
