@@ -11,6 +11,7 @@ import com.google.android.material.button.MaterialButton
 import pe.com.cibertec.inventarioferreteriazamora.R
 import pe.com.cibertec.inventarioferreteriazamora.controller.ControllerProducto
 import pe.com.cibertec.inventarioferreteriazamora.modelos.Producto
+import pe.com.cibertec.inventarioferreteriazamora.service.ApiProducto
 import pe.com.cibertec.inventarioferreteriazamora.utils.ApiUtils
 import retrofit2.Call
 import retrofit2.Callback
@@ -50,48 +51,121 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun sincronizar() {
+        Toast.makeText(this, "Sincronizando...", Toast.LENGTH_SHORT).show()
+
+        val api = ApiUtils.getAPIProducto()
+
+        // Primero subir cambios locales, luego descargar del API
+        subirPendientes(api) {
+            descargarProductos(api)
+        }
+    }
+
+    private fun subirPendientes(api: ApiProducto, onComplete: () -> Unit) {
         val pendientes = controller.listarPendientes()
 
         if (pendientes.isEmpty()) {
-            Toast.makeText(this, "No hay productos pendientes de sincronizar", Toast.LENGTH_SHORT).show()
+            onComplete()
             return
         }
 
-        Toast.makeText(this, "Sincronizando ${pendientes.size} producto(s)...", Toast.LENGTH_SHORT).show()
-
-        val api = ApiUtils.getAPIProducto()
+        var procesados = 0
         var sincronizados = 0
         var errores = 0
 
         for (producto in pendientes) {
-            val call = api.crearProducto(producto)
+            val call = if (producto.idApi > 0) {
+                // Producto ya existe en el API -> usar PUT
+                api.actualizarProducto(producto.idApi, producto)
+            } else {
+                // Producto nuevo -> usar POST
+                api.crearProducto(producto)
+            }
+
             call.enqueue(object : Callback<Producto> {
                 override fun onResponse(call: Call<Producto>, response: Response<Producto>) {
                     if (response.isSuccessful) {
-                        controller.marcarSincronizado(producto.cod)
+                        val productoApi = response.body()
+                        val apiId = productoApi?.idApi ?: 0
+                        controller.marcarSincronizado(producto.cod, apiId)
                         sincronizados++
                     } else {
                         errores++
                     }
-                    verificarFin(pendientes.size, sincronizados, errores)
+                    procesados++
+                    if (procesados == pendientes.size) {
+                        mostrarResultadoSync(sincronizados, errores)
+                        onComplete()
+                    }
                 }
 
                 override fun onFailure(call: Call<Producto>, t: Throwable) {
                     errores++
-                    verificarFin(pendientes.size, sincronizados, errores)
+                    procesados++
+                    if (procesados == pendientes.size) {
+                        mostrarResultadoSync(sincronizados, errores)
+                        onComplete()
+                    }
                 }
             })
         }
     }
 
-    private fun verificarFin(total: Int, sincronizados: Int, errores: Int) {
-        if (sincronizados + errores == total) {
-            runOnUiThread {
-                if (errores == 0) {
-                    Toast.makeText(this, "Sincronizacion exitosa: $sincronizados producto(s)", Toast.LENGTH_LONG).show()
+    private fun descargarProductos(api: pe.com.cibertec.inventarioferreteriazamora.service.ApiProducto) {
+        api.listarProductos().enqueue(object : Callback<List<Producto>> {
+            override fun onResponse(call: Call<List<Producto>>, response: Response<List<Producto>>) {
+                if (response.isSuccessful) {
+                    val productosApi = response.body() ?: emptyList()
+                    var nuevos = 0
+                    var actualizados = 0
+
+                    for (producto in productosApi) {
+                        val existente = controller.buscarPorIdApi(producto.idApi)
+                        if (existente == null) {
+                            controller.insertarDesdeApi(producto)
+                            nuevos++
+                        } else {
+                            controller.actualizarDesdeApi(producto)
+                            actualizados++
+                        }
+                    }
+
+                    runOnUiThread {
+                        if (nuevos > 0 || actualizados > 0) {
+                            Toast.makeText(this@MainActivity,
+                                "Descargados: $nuevos nuevos, $actualizados actualizados",
+                                Toast.LENGTH_LONG).show()
+                        } else {
+                            Toast.makeText(this@MainActivity,
+                                "Todo sincronizado",
+                                Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 } else {
-                    Toast.makeText(this, "Sincronizados: $sincronizados, Errores: $errores", Toast.LENGTH_LONG).show()
+                    runOnUiThread {
+                        Toast.makeText(this@MainActivity,
+                            "Error al descargar productos del servidor",
+                            Toast.LENGTH_SHORT).show()
+                    }
                 }
+            }
+
+            override fun onFailure(call: Call<List<Producto>>, t: Throwable) {
+                runOnUiThread {
+                    Toast.makeText(this@MainActivity,
+                        "Error de conexion: ${t.message}",
+                        Toast.LENGTH_SHORT).show()
+                }
+            }
+        })
+    }
+
+    private fun mostrarResultadoSync(sincronizados: Int, errores: Int) {
+        runOnUiThread {
+            if (errores == 0 && sincronizados > 0) {
+                Toast.makeText(this, "Subidos: $sincronizados producto(s)", Toast.LENGTH_SHORT).show()
+            } else if (errores > 0) {
+                Toast.makeText(this, "Subidos: $sincronizados, Errores: $errores", Toast.LENGTH_SHORT).show()
             }
         }
     }

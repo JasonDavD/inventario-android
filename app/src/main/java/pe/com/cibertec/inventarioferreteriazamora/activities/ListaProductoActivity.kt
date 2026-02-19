@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -34,6 +35,7 @@ class ListaProductoActivity : AppCompatActivity() {
             onEditar = { producto ->
                 val intent = Intent(this, NuevoProductoActivity::class.java).apply {
                     putExtra("cod", producto.cod)
+                    putExtra("idApi", producto.idApi)
                     putExtra("nombre", producto.nombre)
                     putExtra("categoria", producto.categoria)
                     putExtra("precio", producto.precio)
@@ -48,10 +50,10 @@ class ListaProductoActivity : AppCompatActivity() {
                     .setPositiveButton("Eliminar") { _, _ ->
                         val resultado = controller.eliminar(producto.cod)
                         if (resultado > 0) {
-                            Toast.makeText(this, "Producto eliminado", Toast.LENGTH_SHORT).show()
+                            showAlert("Producto eliminado")
                             cargarProductos()
                         } else {
-                            Toast.makeText(this, "Error al eliminar", Toast.LENGTH_SHORT).show()
+                            showAlert("Error al eliminar")
                         }
                     }
                     .setNegativeButton("Cancelar", null)
@@ -79,4 +81,14 @@ class ListaProductoActivity : AppCompatActivity() {
             rvProductos.visibility = View.VISIBLE
         }
     }
+
+    fun showAlert(men:String){
+        val builder= AlertDialog.Builder(this)
+        builder.setTitle("SISTEMA")
+        builder.setMessage(men)
+        builder.setPositiveButton("Aceptar",null)
+        val dialog: AlertDialog =builder.create()
+        dialog.show()
+    }
+
 }

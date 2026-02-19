@@ -2,6 +2,7 @@ package pe.com.cibertec.inventarioferreteriazamora.activities
 
 import android.os.Bundle
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
@@ -19,6 +20,7 @@ class NuevoProductoActivity : AppCompatActivity() {
 
     private val controller = ControllerProducto()
     private var codEditar: Int = -1
+    private var idApiEditar: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,6 +34,7 @@ class NuevoProductoActivity : AppCompatActivity() {
 
         // Verificar si es modo edicion
         codEditar = intent.getIntExtra("cod", -1)
+        idApiEditar = intent.getIntExtra("idApi", 0)
         if (codEditar != -1) {
             cargarDatosEdicion()
         }
@@ -95,21 +98,31 @@ class NuevoProductoActivity : AppCompatActivity() {
 
         if (codEditar != -1) {
             producto.cod = codEditar
+            producto.idApi = idApiEditar
             val resultado = controller.actualizar(producto)
             if (resultado > 0) {
-                Toast.makeText(this, "Producto actualizado", Toast.LENGTH_SHORT).show()
+                showAlert("Producto actualizado")
                 finish()
             } else {
-                Toast.makeText(this, "Error al actualizar", Toast.LENGTH_SHORT).show()
+                showAlert("Error al actualizar")
             }
         } else {
             val resultado = controller.insertar(producto)
             if (resultado > 0) {
-                Toast.makeText(this, "Producto guardado", Toast.LENGTH_SHORT).show()
+                showAlert("Producto guardado")
                 finish()
             } else {
-                Toast.makeText(this, "Error al guardar", Toast.LENGTH_SHORT).show()
+                showAlert("Error al guardar")
             }
         }
     }
+    fun showAlert(men:String){
+        val builder= AlertDialog.Builder(this)
+        builder.setTitle("SISTEMA")
+        builder.setMessage(men)
+        builder.setPositiveButton("Aceptar",null)
+        val dialog: AlertDialog =builder.create()
+        dialog.show()
+    }
+
 }
