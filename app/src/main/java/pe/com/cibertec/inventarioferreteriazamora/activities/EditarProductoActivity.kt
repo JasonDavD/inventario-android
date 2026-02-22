@@ -9,32 +9,37 @@ import pe.com.cibertec.inventarioferreteriazamora.R
 import pe.com.cibertec.inventarioferreteriazamora.controller.ControllerProducto
 import pe.com.cibertec.inventarioferreteriazamora.modelos.Producto
 
-class NuevoProductoActivity : AppCompatActivity() {
+class EditarProductoActivity : AppCompatActivity() {
 
     private lateinit var txtNombre: TextInputEditText
     private lateinit var txtCategoria: TextInputEditText
     private lateinit var txtPrecio: TextInputEditText
     private lateinit var txtStock: TextInputEditText
-    private lateinit var btnGuardar: MaterialButton
+    private lateinit var btnActualizar: MaterialButton
 
     private val controller = ControllerProducto()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_nuevo_producto)
+        setContentView(R.layout.activity_editar_producto)
 
         txtNombre = findViewById(R.id.txtNombre)
         txtCategoria = findViewById(R.id.txtCategoria)
         txtPrecio = findViewById(R.id.txtPrecio)
         txtStock = findViewById(R.id.txtStock)
-        btnGuardar = findViewById(R.id.btnGuardar)
+        btnActualizar = findViewById(R.id.btnActualizar)
 
-        btnGuardar.setOnClickListener {
-            guardarProducto()
+        txtNombre.setText(intent.getStringExtra("nombre"))
+        txtCategoria.setText(intent.getStringExtra("categoria"))
+        txtPrecio.setText(intent.getDoubleExtra("precio", 0.0).toString())
+        txtStock.setText(intent.getIntExtra("stock", 0).toString())
+
+        btnActualizar.setOnClickListener {
+            actualizarProducto()
         }
     }
 
-    private fun guardarProducto() {
+    private fun actualizarProducto() {
         val nombre = txtNombre.text.toString().trim()
         val categoria = txtCategoria.text.toString().trim()
         val precioStr = txtPrecio.text.toString().trim()
@@ -71,18 +76,20 @@ class NuevoProductoActivity : AppCompatActivity() {
         }
 
         val producto = Producto(
+            cod = intent.getIntExtra("cod", 0),
+            idApi = intent.getIntExtra("idApi", 0),
             nombre = nombre,
             categoria = categoria,
             precio = precio,
             stock = stock
         )
 
-        val resultado = controller.insertar(producto)
+        val resultado = controller.actualizar(producto)
         if (resultado > 0) {
-            showAlert("Producto guardado")
+            showAlert("Producto actualizado")
             finish()
         } else {
-            showAlert("Error al guardar")
+            showAlert("Error al actualizar")
         }
     }
 

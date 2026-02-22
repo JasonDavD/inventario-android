@@ -33,7 +33,7 @@ class ListaProductoActivity : AppCompatActivity() {
         adapter = ProductoAdapter(
             arrayListOf(),
             onEditar = { producto ->
-                val intent = Intent(this, NuevoProductoActivity::class.java).apply {
+                val intent = Intent(this, EditarProductoActivity::class.java).apply {
                     putExtra("cod", producto.cod)
                     putExtra("idApi", producto.idApi)
                     putExtra("nombre", producto.nombre)

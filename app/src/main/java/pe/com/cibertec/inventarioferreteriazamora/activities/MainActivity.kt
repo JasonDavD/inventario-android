@@ -111,7 +111,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun descargarProductos(api: pe.com.cibertec.inventarioferreteriazamora.service.ApiProducto) {
+    private fun descargarProductos(api: ApiProducto) {
         api.listarProductos().enqueue(object : Callback<List<Producto>> {
             override fun onResponse(call: Call<List<Producto>>, response: Response<List<Producto>>) {
                 if (response.isSuccessful) {
