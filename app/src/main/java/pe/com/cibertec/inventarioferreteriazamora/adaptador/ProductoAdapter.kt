@@ -24,7 +24,8 @@ class ProductoAdapter(
         val producto = listaProductos[position]
 
         holder.tvNombre.text = producto.nombre
-        holder.tvCategoria.text = producto.categoria
+        holder.tvCategoria.text = if (producto.categoriaNombre.isNotEmpty()) producto.categoriaNombre else "Sin categoria"
+        holder.tvProveedor.text = if (producto.proveedorNombre.isNotEmpty()) producto.proveedorNombre else "Sin proveedor"
         holder.tvPrecio.text = "S/ %.2f".format(producto.precio)
         holder.tvStock.text = "Stock: ${producto.stock}"
 
@@ -36,13 +37,8 @@ class ProductoAdapter(
             holder.tvSync.setBackgroundColor(Color.parseColor("#FF9800"))
         }
 
-        holder.btnEditar.setOnClickListener {
-            onEditar(producto)
-        }
-
-        holder.btnEliminar.setOnClickListener {
-            onEliminar(producto)
-        }
+        holder.btnEditar.setOnClickListener { onEditar(producto) }
+        holder.btnEliminar.setOnClickListener { onEliminar(producto) }
     }
 
     override fun getItemCount(): Int = listaProductos.size

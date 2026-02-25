@@ -12,9 +12,18 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import pe.com.cibertec.inventarioferreteriazamora.R
+import pe.com.cibertec.inventarioferreteriazamora.controller.ControllerCategoria
 import pe.com.cibertec.inventarioferreteriazamora.controller.ControllerProducto
+import pe.com.cibertec.inventarioferreteriazamora.controller.ControllerProveedor
+import pe.com.cibertec.inventarioferreteriazamora.modelos.Categoria
+import pe.com.cibertec.inventarioferreteriazamora.modelos.CategoriaRef
 import pe.com.cibertec.inventarioferreteriazamora.modelos.Producto
+import pe.com.cibertec.inventarioferreteriazamora.modelos.ProductoRequest
+import pe.com.cibertec.inventarioferreteriazamora.modelos.Proveedor
+import pe.com.cibertec.inventarioferreteriazamora.modelos.ProveedorRef
+import pe.com.cibertec.inventarioferreteriazamora.service.ApiCategoria
 import pe.com.cibertec.inventarioferreteriazamora.service.ApiProducto
+import pe.com.cibertec.inventarioferreteriazamora.service.ApiProveedor
 import pe.com.cibertec.inventarioferreteriazamora.utils.ApiUtils
 import retrofit2.Call
 import retrofit2.Callback
@@ -22,7 +31,9 @@ import retrofit2.Response
 
 class MainActivity : AppCompatActivity() {
 
-    private val controller = ControllerProducto()
+    private val controllerProducto = ControllerProducto()
+    private val controllerCategoria = ControllerCategoria()
+    private val controllerProveedor = ControllerProveedor()
     private lateinit var bd: DatabaseReference
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -40,17 +51,25 @@ class MainActivity : AppCompatActivity() {
 
         val btnNuevo = findViewById<MaterialButton>(R.id.btnNuevoProducto)
         val btnVer = findViewById<MaterialButton>(R.id.btnVerProductos)
+        val btnCategorias = findViewById<MaterialButton>(R.id.btnGestionarCategorias)
+        val btnProveedores = findViewById<MaterialButton>(R.id.btnGestionarProveedores)
         val btnSync = findViewById<MaterialButton>(R.id.btnSincronizar)
         val btnFirebase = findViewById<MaterialButton>(R.id.btnFirebase)
 
         btnNuevo.setOnClickListener {
-            val intent = Intent(this, NuevoProductoActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, NuevoProductoActivity::class.java))
         }
 
         btnVer.setOnClickListener {
-            val intent = Intent(this, ListaProductoActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, ListaProductoActivity::class.java))
+        }
+
+        btnCategorias.setOnClickListener {
+            startActivity(Intent(this, ListaCategoriaActivity::class.java))
+        }
+
+        btnProveedores.setOnClickListener {
+            startActivity(Intent(this, ListaProveedorActivity::class.java))
         }
 
         btnSync.setOnClickListener {
@@ -58,24 +77,168 @@ class MainActivity : AppCompatActivity() {
         }
 
         btnFirebase.setOnClickListener {
-            val intent = Intent(this, ListaFirebaseActivity::class.java)
-            startActivity(intent)
+            startActivity(Intent(this, ListaFirebaseActivity::class.java))
         }
     }
 
     private fun sincronizar() {
         Toast.makeText(this, "Sincronizando...", Toast.LENGTH_SHORT).show()
 
-        val api = ApiUtils.getAPIProducto()
+        val apiCat = ApiUtils.getAPICategoria()
+        val apiProv = ApiUtils.getAPIProveedor()
+        val apiProd = ApiUtils.getAPIProducto()
 
-        // Primero subir cambios locales, luego descargar del API
-        subirPendientes(api) {
-            descargarProductos(api)
+        // Flujo encadenado bidireccional:
+        // subir pendientes categoria → subir pendientes proveedor →
+        // descargar categorias → descargar proveedores →
+        // subir pendientes productos → descargar productos
+        subirPendientesCategorias(apiCat) {
+            subirPendientesProveedores(apiProv) {
+                descargarCategorias(apiCat) {
+                    descargarProveedores(apiProv) {
+                        subirPendientesProductos(apiProd) {
+                            descargarProductos(apiProd)
+                        }
+                    }
+                }
+            }
         }
     }
 
-    private fun subirPendientes(api: ApiProducto, onComplete: () -> Unit) {
-        val pendientes = controller.listarPendientes()
+    private fun subirPendientesCategorias(api: ApiCategoria, onComplete: () -> Unit) {
+        val pendientes = controllerCategoria.listarPendientes()
+
+        if (pendientes.isEmpty()) {
+            onComplete()
+            return
+        }
+
+        var procesados = 0
+
+        for (categoria in pendientes) {
+            val call = if (categoria.idApi > 0) {
+                api.actualizarCategoria(categoria.idApi, categoria)
+            } else {
+                api.crearCategoria(categoria)
+            }
+
+            call.enqueue(object : Callback<Categoria> {
+                override fun onResponse(call: Call<Categoria>, response: Response<Categoria>) {
+                    if (response.isSuccessful) {
+                        val apiId = response.body()?.idApi ?: categoria.idApi
+                        if (apiId > 0) {
+                            controllerCategoria.marcarSincronizado(categoria.cod, apiId)
+                            val catSync = categoria.copy(idApi = apiId, estadoSync = 1)
+                            if (categoria.idApi == 0) {
+                                bd.child("categorias").child(categoria.cod.toString()).removeValue()
+                            }
+                            bd.child("categorias").child(apiId.toString()).setValue(catSync)
+                        }
+                    }
+                    procesados++
+                    if (procesados == pendientes.size) onComplete()
+                }
+
+                override fun onFailure(call: Call<Categoria>, t: Throwable) {
+                    procesados++
+                    if (procesados == pendientes.size) onComplete()
+                }
+            })
+        }
+    }
+
+    private fun subirPendientesProveedores(api: ApiProveedor, onComplete: () -> Unit) {
+        val pendientes = controllerProveedor.listarPendientes()
+
+        if (pendientes.isEmpty()) {
+            onComplete()
+            return
+        }
+
+        var procesados = 0
+
+        for (proveedor in pendientes) {
+            val call = if (proveedor.idApi > 0) {
+                api.actualizarProveedor(proveedor.idApi, proveedor)
+            } else {
+                api.crearProveedor(proveedor)
+            }
+
+            call.enqueue(object : Callback<Proveedor> {
+                override fun onResponse(call: Call<Proveedor>, response: Response<Proveedor>) {
+                    if (response.isSuccessful) {
+                        val apiId = response.body()?.idApi ?: proveedor.idApi
+                        if (apiId > 0) {
+                            controllerProveedor.marcarSincronizado(proveedor.cod, apiId)
+                            val provSync = proveedor.copy(idApi = apiId, estadoSync = 1)
+                            if (proveedor.idApi == 0) {
+                                bd.child("proveedores").child(proveedor.cod.toString()).removeValue()
+                            }
+                            bd.child("proveedores").child(apiId.toString()).setValue(provSync)
+                        }
+                    }
+                    procesados++
+                    if (procesados == pendientes.size) onComplete()
+                }
+
+                override fun onFailure(call: Call<Proveedor>, t: Throwable) {
+                    procesados++
+                    if (procesados == pendientes.size) onComplete()
+                }
+            })
+        }
+    }
+
+    private fun descargarCategorias(api: ApiCategoria, onComplete: () -> Unit) {
+        api.listarCategorias().enqueue(object : Callback<List<Categoria>> {
+            override fun onResponse(call: Call<List<Categoria>>, response: Response<List<Categoria>>) {
+                if (response.isSuccessful) {
+                    val lista = response.body() ?: emptyList()
+                    for (cat in lista) {
+                        val existente = controllerCategoria.buscarPorIdApi(cat.idApi)
+                        if (existente == null) {
+                            controllerCategoria.insertarDesdeApi(cat)
+                            bd.child("categorias").child(cat.idApi.toString()).setValue(cat)
+                        } else {
+                            controllerCategoria.actualizarDesdeApi(cat)
+                        }
+                    }
+                }
+                onComplete()
+            }
+
+            override fun onFailure(call: Call<List<Categoria>>, t: Throwable) {
+                onComplete()
+            }
+        })
+    }
+
+    private fun descargarProveedores(api: ApiProveedor, onComplete: () -> Unit) {
+        api.listarProveedores().enqueue(object : Callback<List<Proveedor>> {
+            override fun onResponse(call: Call<List<Proveedor>>, response: Response<List<Proveedor>>) {
+                if (response.isSuccessful) {
+                    val lista = response.body() ?: emptyList()
+                    for (prov in lista) {
+                        val existente = controllerProveedor.buscarPorIdApi(prov.idApi)
+                        if (existente == null) {
+                            controllerProveedor.insertarDesdeApi(prov)
+                            bd.child("proveedores").child(prov.idApi.toString()).setValue(prov)
+                        } else {
+                            controllerProveedor.actualizarDesdeApi(prov)
+                        }
+                    }
+                }
+                onComplete()
+            }
+
+            override fun onFailure(call: Call<List<Proveedor>>, t: Throwable) {
+                onComplete()
+            }
+        })
+    }
+
+    private fun subirPendientesProductos(api: ApiProducto, onComplete: () -> Unit) {
+        val pendientes = controllerProducto.listarPendientes()
 
         if (pendientes.isEmpty()) {
             onComplete()
@@ -87,12 +250,29 @@ class MainActivity : AppCompatActivity() {
         var errores = 0
 
         for (producto in pendientes) {
+            val categoriaRef = if (producto.categoriaId > 0) {
+                val cat = controllerCategoria.listar().firstOrNull { it.cod == producto.categoriaId }
+                if (cat != null && cat.idApi > 0) CategoriaRef(id = cat.idApi, nombre = cat.nombre) else null
+            } else null
+
+            val proveedorRef = if (producto.proveedorId > 0) {
+                val prov = controllerProveedor.listar().firstOrNull { it.cod == producto.proveedorId }
+                if (prov != null && prov.idApi > 0) ProveedorRef(id = prov.idApi, nombre = prov.nombre) else null
+            } else null
+
+            val request = ProductoRequest(
+                id = producto.idApi,
+                nombre = producto.nombre,
+                categoria = categoriaRef,
+                proveedor = proveedorRef,
+                precio = producto.precio,
+                stock = producto.stock
+            )
+
             val call = if (producto.idApi > 0) {
-                // Producto ya existe en el API -> usar PUT
-                api.actualizarProducto(producto.idApi, producto)
+                api.actualizarProducto(producto.idApi, request)
             } else {
-                // Producto nuevo -> usar POST
-                api.crearProducto(producto)
+                api.crearProducto(request)
             }
 
             call.enqueue(object : Callback<Producto> {
@@ -100,7 +280,7 @@ class MainActivity : AppCompatActivity() {
                     if (response.isSuccessful) {
                         val productoApi = response.body()
                         val apiId = productoApi?.idApi ?: 0
-                        controller.marcarSincronizado(producto.cod, apiId)
+                        controllerProducto.marcarSincronizado(producto.cod, apiId)
                         val updates = mapOf<String, Any>("estadoSync" to 1)
                         bd.child("productos").child(producto.cod.toString()).updateChildren(updates)
                         sincronizados++
@@ -135,12 +315,12 @@ class MainActivity : AppCompatActivity() {
                     var actualizados = 0
 
                     for (producto in productosApi) {
-                        val existente = controller.buscarPorIdApi(producto.idApi)
+                        val existente = controllerProducto.buscarPorIdApi(producto.idApi)
                         if (existente == null) {
-                            controller.insertarDesdeApi(producto)
+                            controllerProducto.insertarDesdeApi(producto)
                             nuevos++
                         } else {
-                            controller.actualizarDesdeApi(producto)
+                            controllerProducto.actualizarDesdeApi(producto)
                             actualizados++
                         }
                     }

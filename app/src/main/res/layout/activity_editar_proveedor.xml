@@ -6,16 +6,15 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="?attr/colorSurface"
-    tools:context=".activities.EditarProductoActivity">
+    tools:context=".activities.EditarProveedorActivity">
 
     <com.google.android.material.appbar.MaterialToolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
-        app:title="Editar Producto"
-        app:titleTextColor="@color/white"
-        app:navigationIcon="@drawable/ic_launcher_foreground" />
+        app:title="Editar Proveedor"
+        app:titleTextColor="@color/white" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -31,78 +30,47 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                android:hint="Nombre del producto"
+                android:hint="Nombre"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/txtNombre"
+                    android:id="@+id/txtNombreProveedor"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:inputType="text" />
             </com.google.android.material.textfield.TextInputLayout>
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Categoria"
-                android:textSize="14sp"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:layout_marginBottom="4dp" />
-
-            <Spinner
-                android:id="@+id/spinnerCategoria"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginBottom="16dp"
-                android:background="@android:drawable/btn_dropdown"
-                android:padding="8dp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Proveedor"
-                android:textSize="14sp"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:layout_marginBottom="4dp" />
-
-            <Spinner
-                android:id="@+id/spinnerProveedor"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginBottom="16dp"
-                android:background="@android:drawable/btn_dropdown"
-                android:padding="8dp" />
-
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
-                android:hint="Precio (S/)"
+                android:hint="Telefono (opcional)"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/txtPrecio"
+                    android:id="@+id/txtTelefonoProveedor"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="numberDecimal" />
+                    android:inputType="phone" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.textfield.TextInputLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="24dp"
-                android:hint="Stock"
+                android:hint="Direccion (opcional)"
                 style="@style/Widget.Material3.TextInputLayout.OutlinedBox">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/txtStock"
+                    android:id="@+id/txtDireccionProveedor"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="number" />
+                    android:inputType="textMultiLine"
+                    android:lines="2" />
             </com.google.android.material.textfield.TextInputLayout>
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnActualizar"
+                android:id="@+id/btnActualizarProveedor"
                 android:layout_width="match_parent"
                 android:layout_height="56dp"
                 android:text="Actualizar"

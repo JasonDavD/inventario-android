@@ -1,6 +1,8 @@
 package pe.com.cibertec.inventarioferreteriazamora.activities
 
 import android.os.Bundle
+import android.widget.ArrayAdapter
+import android.widget.Spinner
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButton
@@ -9,32 +11,66 @@ import com.google.firebase.FirebaseApp
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import pe.com.cibertec.inventarioferreteriazamora.R
+import pe.com.cibertec.inventarioferreteriazamora.controller.ControllerCategoria
 import pe.com.cibertec.inventarioferreteriazamora.controller.ControllerProducto
+import pe.com.cibertec.inventarioferreteriazamora.controller.ControllerProveedor
+import pe.com.cibertec.inventarioferreteriazamora.modelos.Categoria
 import pe.com.cibertec.inventarioferreteriazamora.modelos.Producto
+import pe.com.cibertec.inventarioferreteriazamora.modelos.Proveedor
 
 class NuevoProductoActivity : AppCompatActivity() {
 
     private lateinit var txtNombre: TextInputEditText
-    private lateinit var txtCategoria: TextInputEditText
+    private lateinit var spinnerCategoria: Spinner
+    private lateinit var spinnerProveedor: Spinner
     private lateinit var txtPrecio: TextInputEditText
     private lateinit var txtStock: TextInputEditText
     private lateinit var btnGuardar: MaterialButton
 
     private val controller = ControllerProducto()
+    private val controllerCat = ControllerCategoria()
+    private val controllerProv = ControllerProveedor()
     private lateinit var bd: DatabaseReference
+
+    private var categorias = ArrayList<Categoria>()
+    private var proveedores = ArrayList<Proveedor>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_nuevo_producto)
 
         txtNombre = findViewById(R.id.txtNombre)
-        txtCategoria = findViewById(R.id.txtCategoria)
+        spinnerCategoria = findViewById(R.id.spinnerCategoria)
+        spinnerProveedor = findViewById(R.id.spinnerProveedor)
         txtPrecio = findViewById(R.id.txtPrecio)
         txtStock = findViewById(R.id.txtStock)
         btnGuardar = findViewById(R.id.btnGuardar)
 
         FirebaseApp.initializeApp(this)
         bd = FirebaseDatabase.getInstance().reference
+
+        categorias = controllerCat.listar()
+        proveedores = controllerProv.listar()
+
+        if (categorias.isEmpty() || proveedores.isEmpty()) {
+            AlertDialog.Builder(this)
+                .setTitle("Datos requeridos")
+                .setMessage("No hay categorias o proveedores disponibles.\nSincroniza o agrega datos primero.")
+                .setPositiveButton("Aceptar") { _, _ -> finish() }
+                .setCancelable(false)
+                .show()
+            return
+        }
+
+        val adapterCat = ArrayAdapter(this, android.R.layout.simple_spinner_item,
+            categorias.map { it.nombre })
+        adapterCat.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerCategoria.adapter = adapterCat
+
+        val adapterProv = ArrayAdapter(this, android.R.layout.simple_spinner_item,
+            proveedores.map { it.nombre })
+        adapterProv.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerProveedor.adapter = adapterProv
 
         btnGuardar.setOnClickListener {
             guardarProducto()
@@ -43,7 +79,6 @@ class NuevoProductoActivity : AppCompatActivity() {
 
     private fun guardarProducto() {
         val nombre = txtNombre.text.toString().trim()
-        val categoria = txtCategoria.text.toString().trim()
         val precioStr = txtPrecio.text.toString().trim()
         val stockStr = txtStock.text.toString().trim()
 
@@ -77,9 +112,15 @@ class NuevoProductoActivity : AppCompatActivity() {
             return
         }
 
+        val categoriaSeleccionada = categorias[spinnerCategoria.selectedItemPosition]
+        val proveedorSeleccionado = proveedores[spinnerProveedor.selectedItemPosition]
+
         val producto = Producto(
             nombre = nombre,
-            categoria = categoria,
+            categoriaId = categoriaSeleccionada.cod,
+            categoriaNombre = categoriaSeleccionada.nombre,
+            proveedorId = proveedorSeleccionado.cod,
+            proveedorNombre = proveedorSeleccionado.nombre,
             precio = precio,
             stock = stock
         )
@@ -105,7 +146,6 @@ class NuevoProductoActivity : AppCompatActivity() {
         builder.setTitle("SISTEMA")
         builder.setMessage(men)
         builder.setPositiveButton("Aceptar", null)
-        val dialog: AlertDialog = builder.create()
-        dialog.show()
+        builder.create().show()
     }
 }

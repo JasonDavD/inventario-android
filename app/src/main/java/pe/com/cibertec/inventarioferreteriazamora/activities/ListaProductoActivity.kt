@@ -44,7 +44,8 @@ class ListaProductoActivity : AppCompatActivity() {
                     putExtra("cod", producto.cod)
                     putExtra("idApi", producto.idApi)
                     putExtra("nombre", producto.nombre)
-                    putExtra("categoria", producto.categoria)
+                    putExtra("categoriaId", producto.categoriaId)
+                    putExtra("proveedorId", producto.proveedorId)
                     putExtra("precio", producto.precio)
                     putExtra("stock", producto.stock)
                 }
@@ -90,13 +91,11 @@ class ListaProductoActivity : AppCompatActivity() {
         }
     }
 
-    fun showAlert(men:String){
-        val builder= AlertDialog.Builder(this)
+    fun showAlert(men: String) {
+        val builder = AlertDialog.Builder(this)
         builder.setTitle("SISTEMA")
         builder.setMessage(men)
-        builder.setPositiveButton("Aceptar",null)
-        val dialog: AlertDialog =builder.create()
-        dialog.show()
+        builder.setPositiveButton("Aceptar", null)
+        builder.create().show()
     }
-
 }

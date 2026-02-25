@@ -31,6 +31,14 @@
         <activity android:name=".activities.ListaProductoActivity" />
         <activity android:name=".activities.ListaFirebaseActivity" />
 
+        <activity android:name=".activities.ListaCategoriaActivity" />
+        <activity android:name=".activities.NuevaCategoriaActivity" />
+        <activity android:name=".activities.EditarCategoriaActivity" />
+
+        <activity android:name=".activities.ListaProveedorActivity" />
+        <activity android:name=".activities.NuevoProveedorActivity" />
+        <activity android:name=".activities.EditarProveedorActivity" />
+
     </application>
 
 </manifest>

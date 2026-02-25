@@ -1,6 +1,7 @@
 package pe.com.cibertec.inventarioferreteriazamora.service
 
 import pe.com.cibertec.inventarioferreteriazamora.modelos.Producto
+import pe.com.cibertec.inventarioferreteriazamora.modelos.ProductoRequest
 import retrofit2.Call
 import retrofit2.http.*
 
@@ -10,10 +11,10 @@ interface ApiProducto {
     fun listarProductos(): Call<List<Producto>>
 
     @POST("api/productos")
-    fun crearProducto(@Body producto: Producto): Call<Producto>
+    fun crearProducto(@Body request: ProductoRequest): Call<Producto>
 
     @PUT("api/productos/{id}")
-    fun actualizarProducto(@Path("id") id: Int, @Body producto: Producto): Call<Producto>
+    fun actualizarProducto(@Path("id") id: Int, @Body request: ProductoRequest): Call<Producto>
 
     @DELETE("api/productos/{id}")
     fun eliminarProducto(@Path("id") id: Int): Call<Void>

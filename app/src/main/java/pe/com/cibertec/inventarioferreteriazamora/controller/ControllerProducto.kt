@@ -10,11 +10,15 @@ class ControllerProducto {
         val db = AppConfig.BD.writableDatabase
         val valores = ContentValues().apply {
             put("nombre", producto.nombre)
-            put("categoria", producto.categoria)
+            put("categoria", "")
             put("precio", producto.precio)
             put("stock", producto.stock)
             put("estado_sync", 0)
             put("id_api", producto.idApi)
+            put("categoria_id", producto.categoriaId)
+            put("categoria_nombre", producto.categoriaNombre)
+            put("proveedor_id", producto.proveedorId)
+            put("proveedor_nombre", producto.proveedorNombre)
         }
         val resultado = db.insert("tb_producto", null, valores)
         db.close()
@@ -29,11 +33,14 @@ class ControllerProducto {
             val producto = Producto(
                 cod = cursor.getInt(0),
                 nombre = cursor.getString(1),
-                categoria = cursor.getString(2),
                 precio = cursor.getDouble(3),
                 stock = cursor.getInt(4),
                 estadoSync = cursor.getInt(5),
-                idApi = cursor.getInt(6)
+                idApi = cursor.getInt(6),
+                categoriaId = cursor.getInt(7),
+                categoriaNombre = cursor.getString(8) ?: "",
+                proveedorId = cursor.getInt(9),
+                proveedorNombre = cursor.getString(10) ?: ""
             )
             lista.add(producto)
         }
@@ -46,11 +53,14 @@ class ControllerProducto {
         val db = AppConfig.BD.writableDatabase
         val valores = ContentValues().apply {
             put("nombre", producto.nombre)
-            put("categoria", producto.categoria)
             put("precio", producto.precio)
             put("stock", producto.stock)
             put("estado_sync", 0)
             put("id_api", producto.idApi)
+            put("categoria_id", producto.categoriaId)
+            put("categoria_nombre", producto.categoriaNombre)
+            put("proveedor_id", producto.proveedorId)
+            put("proveedor_nombre", producto.proveedorNombre)
         }
         val resultado = db.update("tb_producto", valores, "cod=?", arrayOf(producto.cod.toString()))
         db.close()
@@ -72,11 +82,14 @@ class ControllerProducto {
             val producto = Producto(
                 cod = cursor.getInt(0),
                 nombre = cursor.getString(1),
-                categoria = cursor.getString(2),
                 precio = cursor.getDouble(3),
                 stock = cursor.getInt(4),
                 estadoSync = cursor.getInt(5),
-                idApi = cursor.getInt(6)
+                idApi = cursor.getInt(6),
+                categoriaId = cursor.getInt(7),
+                categoriaNombre = cursor.getString(8) ?: "",
+                proveedorId = cursor.getInt(9),
+                proveedorNombre = cursor.getString(10) ?: ""
             )
             lista.add(producto)
         }
@@ -104,11 +117,14 @@ class ControllerProducto {
             producto = Producto(
                 cod = cursor.getInt(0),
                 nombre = cursor.getString(1),
-                categoria = cursor.getString(2),
                 precio = cursor.getDouble(3),
                 stock = cursor.getInt(4),
                 estadoSync = cursor.getInt(5),
-                idApi = cursor.getInt(6)
+                idApi = cursor.getInt(6),
+                categoriaId = cursor.getInt(7),
+                categoriaNombre = cursor.getString(8) ?: "",
+                proveedorId = cursor.getInt(9),
+                proveedorNombre = cursor.getString(10) ?: ""
             )
         }
         cursor.close()
@@ -118,13 +134,21 @@ class ControllerProducto {
 
     fun insertarDesdeApi(producto: Producto): Long {
         val db = AppConfig.BD.writableDatabase
+        val catId = producto.categoriaApi?.id ?: 0
+        val catNombre = producto.categoriaApi?.nombre ?: ""
+        val provId = producto.proveedorApi?.id ?: 0
+        val provNombre = producto.proveedorApi?.nombre ?: ""
         val valores = ContentValues().apply {
             put("nombre", producto.nombre)
-            put("categoria", producto.categoria)
+            put("categoria", "")
             put("precio", producto.precio)
             put("stock", producto.stock)
             put("estado_sync", 1)
             put("id_api", producto.idApi)
+            put("categoria_id", catId)
+            put("categoria_nombre", catNombre)
+            put("proveedor_id", provId)
+            put("proveedor_nombre", provNombre)
         }
         val resultado = db.insert("tb_producto", null, valores)
         db.close()
@@ -133,12 +157,19 @@ class ControllerProducto {
 
     fun actualizarDesdeApi(producto: Producto): Int {
         val db = AppConfig.BD.writableDatabase
+        val catId = producto.categoriaApi?.id ?: 0
+        val catNombre = producto.categoriaApi?.nombre ?: ""
+        val provId = producto.proveedorApi?.id ?: 0
+        val provNombre = producto.proveedorApi?.nombre ?: ""
         val valores = ContentValues().apply {
             put("nombre", producto.nombre)
-            put("categoria", producto.categoria)
             put("precio", producto.precio)
             put("stock", producto.stock)
             put("estado_sync", 1)
+            put("categoria_id", catId)
+            put("categoria_nombre", catNombre)
+            put("proveedor_id", provId)
+            put("proveedor_nombre", provNombre)
         }
         val resultado = db.update("tb_producto", valores, "id_api=?", arrayOf(producto.idApi.toString()))
         db.close()

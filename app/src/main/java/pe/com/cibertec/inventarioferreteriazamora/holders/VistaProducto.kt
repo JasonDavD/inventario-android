@@ -9,6 +9,7 @@ import pe.com.cibertec.inventarioferreteriazamora.R
 class VistaProducto(itemView: View) : RecyclerView.ViewHolder(itemView) {
     val tvNombre: TextView = itemView.findViewById(R.id.tvNombre)
     val tvCategoria: TextView = itemView.findViewById(R.id.tvCategoria)
+    val tvProveedor: TextView = itemView.findViewById(R.id.tvProveedor)
     val tvPrecio: TextView = itemView.findViewById(R.id.tvPrecio)
     val tvStock: TextView = itemView.findViewById(R.id.tvStock)
     val tvSync: TextView = itemView.findViewById(R.id.tvSync)
