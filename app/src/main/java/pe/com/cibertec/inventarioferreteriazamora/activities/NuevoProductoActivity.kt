@@ -5,6 +5,9 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
+import com.google.firebase.FirebaseApp
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 import pe.com.cibertec.inventarioferreteriazamora.R
 import pe.com.cibertec.inventarioferreteriazamora.controller.ControllerProducto
 import pe.com.cibertec.inventarioferreteriazamora.modelos.Producto
@@ -18,6 +21,7 @@ class NuevoProductoActivity : AppCompatActivity() {
     private lateinit var btnGuardar: MaterialButton
 
     private val controller = ControllerProducto()
+    private lateinit var bd: DatabaseReference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,6 +32,9 @@ class NuevoProductoActivity : AppCompatActivity() {
         txtPrecio = findViewById(R.id.txtPrecio)
         txtStock = findViewById(R.id.txtStock)
         btnGuardar = findViewById(R.id.btnGuardar)
+
+        FirebaseApp.initializeApp(this)
+        bd = FirebaseDatabase.getInstance().reference
 
         btnGuardar.setOnClickListener {
             guardarProducto()
@@ -79,8 +86,15 @@ class NuevoProductoActivity : AppCompatActivity() {
 
         val resultado = controller.insertar(producto)
         if (resultado > 0) {
-            showAlert("Producto guardado")
-            finish()
+            val productoFirebase = producto.copy(cod = resultado.toInt())
+            bd.child("productos").child(resultado.toString()).setValue(productoFirebase)
+                .addOnCompleteListener {
+                    showAlert("Producto guardado")
+                    finish()
+                }.addOnFailureListener {
+                    showAlert("Producto guardado localmente (sin Firebase)")
+                    finish()
+                }
         } else {
             showAlert("Error al guardar")
         }

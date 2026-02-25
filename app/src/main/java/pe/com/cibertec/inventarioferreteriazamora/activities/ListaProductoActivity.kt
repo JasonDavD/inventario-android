@@ -10,6 +10,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.firebase.FirebaseApp
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 import pe.com.cibertec.inventarioferreteriazamora.R
 import pe.com.cibertec.inventarioferreteriazamora.adaptador.ProductoAdapter
 import pe.com.cibertec.inventarioferreteriazamora.controller.ControllerProducto
@@ -20,10 +23,14 @@ class ListaProductoActivity : AppCompatActivity() {
     private lateinit var tvVacio: TextView
     private lateinit var adapter: ProductoAdapter
     private val controller = ControllerProducto()
+    private lateinit var bd: DatabaseReference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_lista_producto)
+
+        FirebaseApp.initializeApp(this)
+        bd = FirebaseDatabase.getInstance().reference
 
         rvProductos = findViewById(R.id.rvProductos)
         tvVacio = findViewById(R.id.tvVacio)
@@ -50,6 +57,7 @@ class ListaProductoActivity : AppCompatActivity() {
                     .setPositiveButton("Eliminar") { _, _ ->
                         val resultado = controller.eliminar(producto.cod)
                         if (resultado > 0) {
+                            bd.child("productos").child(producto.cod.toString()).removeValue()
                             showAlert("Producto eliminado")
                             cargarProductos()
                         } else {

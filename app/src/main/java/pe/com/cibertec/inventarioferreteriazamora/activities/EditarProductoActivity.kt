@@ -5,6 +5,9 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
+import com.google.firebase.FirebaseApp
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 import pe.com.cibertec.inventarioferreteriazamora.R
 import pe.com.cibertec.inventarioferreteriazamora.controller.ControllerProducto
 import pe.com.cibertec.inventarioferreteriazamora.modelos.Producto
@@ -18,10 +21,14 @@ class EditarProductoActivity : AppCompatActivity() {
     private lateinit var btnActualizar: MaterialButton
 
     private val controller = ControllerProducto()
+    private lateinit var bd: DatabaseReference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_editar_producto)
+
+        FirebaseApp.initializeApp(this)
+        bd = FirebaseDatabase.getInstance().reference
 
         txtNombre = findViewById(R.id.txtNombre)
         txtCategoria = findViewById(R.id.txtCategoria)
@@ -86,8 +93,14 @@ class EditarProductoActivity : AppCompatActivity() {
 
         val resultado = controller.actualizar(producto)
         if (resultado > 0) {
-            showAlert("Producto actualizado")
-            finish()
+            bd.child("productos").child(producto.cod.toString()).setValue(producto)
+                .addOnCompleteListener {
+                    showAlert("Producto actualizado")
+                    finish()
+                }.addOnFailureListener {
+                    showAlert("Producto actualizado localmente (sin Firebase)")
+                    finish()
+                }
         } else {
             showAlert("Error al actualizar")
         }

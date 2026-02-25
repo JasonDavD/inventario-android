@@ -8,6 +8,9 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.google.android.material.button.MaterialButton
+import com.google.firebase.FirebaseApp
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 import pe.com.cibertec.inventarioferreteriazamora.R
 import pe.com.cibertec.inventarioferreteriazamora.controller.ControllerProducto
 import pe.com.cibertec.inventarioferreteriazamora.modelos.Producto
@@ -20,11 +23,15 @@ import retrofit2.Response
 class MainActivity : AppCompatActivity() {
 
     private val controller = ControllerProducto()
+    private lateinit var bd: DatabaseReference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
+
+        FirebaseApp.initializeApp(this)
+        bd = FirebaseDatabase.getInstance().reference
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
             val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
@@ -34,6 +41,7 @@ class MainActivity : AppCompatActivity() {
         val btnNuevo = findViewById<MaterialButton>(R.id.btnNuevoProducto)
         val btnVer = findViewById<MaterialButton>(R.id.btnVerProductos)
         val btnSync = findViewById<MaterialButton>(R.id.btnSincronizar)
+        val btnFirebase = findViewById<MaterialButton>(R.id.btnFirebase)
 
         btnNuevo.setOnClickListener {
             val intent = Intent(this, NuevoProductoActivity::class.java)
@@ -47,6 +55,11 @@ class MainActivity : AppCompatActivity() {
 
         btnSync.setOnClickListener {
             sincronizar()
+        }
+
+        btnFirebase.setOnClickListener {
+            val intent = Intent(this, ListaFirebaseActivity::class.java)
+            startActivity(intent)
         }
     }
 
@@ -88,6 +101,8 @@ class MainActivity : AppCompatActivity() {
                         val productoApi = response.body()
                         val apiId = productoApi?.idApi ?: 0
                         controller.marcarSincronizado(producto.cod, apiId)
+                        val updates = mapOf<String, Any>("estadoSync" to 1)
+                        bd.child("productos").child(producto.cod.toString()).updateChildren(updates)
                         sincronizados++
                     } else {
                         errores++

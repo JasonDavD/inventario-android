@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "83408634592",
+    "project_id": "inventario-zamora",
+    "storage_bucket": "inventario-zamora.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:83408634592:android:0196c3899ca3f018660685",
+        "android_client_info": {
+          "package_name": "pe.com.cibertec.inventarioferreteriazamora"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCG0Fd_D2c7QCl0i-hKJVaFrTLP9k5FUAk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

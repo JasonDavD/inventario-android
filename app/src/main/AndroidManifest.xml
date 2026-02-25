@@ -29,6 +29,7 @@
         <activity android:name=".activities.NuevoProductoActivity" />
         <activity android:name=".activities.EditarProductoActivity" />
         <activity android:name=".activities.ListaProductoActivity" />
+        <activity android:name=".activities.ListaFirebaseActivity" />
 
     </application>
 
