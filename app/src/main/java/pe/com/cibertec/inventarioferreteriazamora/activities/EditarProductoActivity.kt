@@ -2,8 +2,9 @@ package pe.com.cibertec.inventarioferreteriazamora.activities
 
 import android.os.Bundle
 import android.widget.ArrayAdapter
-import android.widget.Spinner
+import android.widget.AutoCompleteTextView
 import androidx.appcompat.app.AlertDialog
+import com.google.android.material.textfield.TextInputLayout
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
@@ -21,8 +22,10 @@ import pe.com.cibertec.inventarioferreteriazamora.modelos.Proveedor
 class EditarProductoActivity : AppCompatActivity() {
 
     private lateinit var txtNombre: TextInputEditText
-    private lateinit var spinnerCategoria: Spinner
-    private lateinit var spinnerProveedor: Spinner
+    private lateinit var actvCategoria: AutoCompleteTextView
+    private lateinit var actvProveedor: AutoCompleteTextView
+    private lateinit var tilCategoria: TextInputLayout
+    private lateinit var tilProveedor: TextInputLayout
     private lateinit var txtPrecio: TextInputEditText
     private lateinit var txtStock: TextInputEditText
     private lateinit var btnActualizar: MaterialButton
@@ -43,8 +46,10 @@ class EditarProductoActivity : AppCompatActivity() {
         bd = FirebaseDatabase.getInstance().reference
 
         txtNombre = findViewById(R.id.txtNombre)
-        spinnerCategoria = findViewById(R.id.spinnerCategoria)
-        spinnerProveedor = findViewById(R.id.spinnerProveedor)
+        actvCategoria = findViewById(R.id.actvCategoria)
+        actvProveedor = findViewById(R.id.actvProveedor)
+        tilCategoria = findViewById(R.id.tilCategoria)
+        tilProveedor = findViewById(R.id.tilProveedor)
         txtPrecio = findViewById(R.id.txtPrecio)
         txtStock = findViewById(R.id.txtStock)
         btnActualizar = findViewById(R.id.btnActualizar)
@@ -52,25 +57,27 @@ class EditarProductoActivity : AppCompatActivity() {
         categorias = controllerCat.listar()
         proveedores = controllerProv.listar()
 
-        val adapterCat = ArrayAdapter(this, android.R.layout.simple_spinner_item,
-            categorias.map { it.nombre })
-        adapterCat.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spinnerCategoria.adapter = adapterCat
+        val nombresCategorias = ArrayList<String>()
+        for (cat in categorias) {
+            nombresCategorias.add(cat.nombre)
+        }
+        val adapterCat = ArrayAdapter(this, android.R.layout.simple_list_item_1, nombresCategorias)
+        actvCategoria.setAdapter(adapterCat)
 
-        val adapterProv = ArrayAdapter(this, android.R.layout.simple_spinner_item,
-            proveedores.map { it.nombre })
-        adapterProv.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        spinnerProveedor.adapter = adapterProv
+        val nombresProveedores = ArrayList<String>()
+        for (prov in proveedores) {
+            nombresProveedores.add(prov.nombre)
+        }
+        val adapterProv = ArrayAdapter(this, android.R.layout.simple_list_item_1, nombresProveedores)
+        actvProveedor.setAdapter(adapterProv)
 
         // Pre-seleccionar categoria y proveedor actuales
         val categoriaIdActual = intent.getIntExtra("categoriaId", 0)
         val proveedorIdActual = intent.getIntExtra("proveedorId", 0)
 
-        val posCat = categorias.indexOfFirst { it.cod == categoriaIdActual }
-        if (posCat >= 0) spinnerCategoria.setSelection(posCat)
+        busquedaCategoriaPorCodigo(categoriaIdActual)
 
-        val posProv = proveedores.indexOfFirst { it.cod == proveedorIdActual }
-        if (posProv >= 0) spinnerProveedor.setSelection(posProv)
+        busquedaProveedorPorCodigo(proveedorIdActual)
 
         txtNombre.setText(intent.getStringExtra("nombre"))
         txtPrecio.setText(intent.getDoubleExtra("precio", 0.0).toString())
@@ -116,18 +123,41 @@ class EditarProductoActivity : AppCompatActivity() {
             return
         }
 
-        val categoriaSeleccionada = if (categorias.isNotEmpty())
-            categorias[spinnerCategoria.selectedItemPosition] else Categoria()
-        val proveedorSeleccionado = if (proveedores.isNotEmpty())
-            proveedores[spinnerProveedor.selectedItemPosition] else Proveedor()
+        val nombreCatElegida = actvCategoria.text.toString()
+        val nombreProvElegido = actvProveedor.text.toString()
+
+        if (nombreCatElegida.isEmpty()) {
+            tilCategoria.error = "Selecciona una categoría"
+            return
+        }
+        if (nombreProvElegido.isEmpty()) {
+            tilProveedor.error = "Selecciona un proveedor"
+            return
+        }
+
+        var categoriaSeleccionada: Categoria? = null
+        for (cat in categorias) {
+            if (cat.nombre == nombreCatElegida) {
+                categoriaSeleccionada = cat
+                break
+            }
+        }
+
+        var proveedorSeleccionado: Proveedor? = null
+        for (prov in proveedores) {
+            if (prov.nombre == nombreProvElegido) {
+                proveedorSeleccionado = prov
+                break
+            }
+        }
 
         val producto = Producto(
             cod = intent.getIntExtra("cod", 0),
             idApi = intent.getIntExtra("idApi", 0),
             nombre = nombre,
-            categoriaId = categoriaSeleccionada.cod,
+            categoriaId = categoriaSeleccionada!!.cod,
             categoriaNombre = categoriaSeleccionada.nombre,
-            proveedorId = proveedorSeleccionado.cod,
+            proveedorId = proveedorSeleccionado!!.cod,
             proveedorNombre = proveedorSeleccionado.nombre,
             precio = precio,
             stock = stock
@@ -145,6 +175,24 @@ class EditarProductoActivity : AppCompatActivity() {
                 }
         } else {
             showAlert("Error al actualizar")
+        }
+    }
+
+    fun busquedaCategoriaPorCodigo(categoriaIdActual: Int){
+        for (cat in categorias) {
+            if (cat.cod == categoriaIdActual) {
+                actvCategoria.setText(cat.nombre, false)
+                break
+            }
+        }
+    }
+
+    fun busquedaProveedorPorCodigo(proveedorIdActual : Int){
+        for (prov in proveedores) {
+            if (prov.cod == proveedorIdActual) {
+                actvProveedor.setText(prov.nombre, false)
+                break
+            }
         }
     }
 

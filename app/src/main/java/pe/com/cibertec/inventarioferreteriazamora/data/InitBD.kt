@@ -6,7 +6,7 @@ import pe.com.cibertec.inventarioferreteriazamora.utils.AppConfig
 
 class InitBD : SQLiteOpenHelper(
     AppConfig.CONTEXTO,
-    "inventarioZamora.bd", null, 3
+    "inventarioZamora.bd", null, 4
 ) {
 
     override fun onCreate(db: SQLiteDatabase?) {
@@ -46,6 +46,19 @@ class InitBD : SQLiteOpenHelper(
                 id_api INTEGER DEFAULT 0
             )
         """.trimIndent())
+
+        db?.execSQL("""
+            CREATE TABLE tb_usuario (
+                cod INTEGER PRIMARY KEY AUTOINCREMENT,
+                usuario TEXT NOT NULL UNIQUE,
+                contrasena TEXT NOT NULL,
+                nombre TEXT NOT NULL,
+                rol TEXT NOT NULL
+            )
+        """.trimIndent())
+
+        db?.execSQL("INSERT INTO tb_usuario (usuario, contrasena, nombre, rol) VALUES ('admin', 'admin123', 'Administrador', 'ADMINISTRADOR')")
+        db?.execSQL("INSERT INTO tb_usuario (usuario, contrasena, nombre, rol) VALUES ('almacenero', 'alm123', 'Almacenero', 'ALMACENERO')")
     }
 
     override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
@@ -76,6 +89,19 @@ class InitBD : SQLiteOpenHelper(
                     id_api INTEGER DEFAULT 0
                 )
             """.trimIndent())
+        }
+        if (oldVersion < 4) {
+            db?.execSQL("""
+                CREATE TABLE IF NOT EXISTS tb_usuario (
+                    cod INTEGER PRIMARY KEY AUTOINCREMENT,
+                    usuario TEXT NOT NULL UNIQUE,
+                    contrasena TEXT NOT NULL,
+                    nombre TEXT NOT NULL,
+                    rol TEXT NOT NULL
+                )
+            """.trimIndent())
+            db?.execSQL("INSERT OR IGNORE INTO tb_usuario (usuario, contrasena, nombre, rol) VALUES ('admin', 'admin123', 'Administrador', 'ADMINISTRADOR')")
+            db?.execSQL("INSERT OR IGNORE INTO tb_usuario (usuario, contrasena, nombre, rol) VALUES ('almacenero', 'alm123', 'Almacenero', 'ALMACENERO')")
         }
     }
 }

@@ -2,6 +2,7 @@ package pe.com.cibertec.inventarioferreteriazamora.modelos
 
 import com.google.gson.annotations.SerializedName
 
+//Leer y deserializar datos anidados de API
 data class CategoriaRef(
     @SerializedName("id") val id: Int = 0,
     val nombre: String = ""
@@ -29,6 +30,7 @@ data class Producto(
     var estadoSync: Int = 0
 )
 
+//Dto Para mandar datos al backend
 data class ProductoRequest(
     @SerializedName("id") val id: Int = 0,
     val nombre: String,

@@ -2,6 +2,8 @@ package pe.com.cibertec.inventarioferreteriazamora.activities
 
 import android.content.Intent
 import android.os.Bundle
+import android.view.View
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
@@ -38,6 +40,17 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val prefs = getSharedPreferences("sesion", MODE_PRIVATE)
+        if (!prefs.getBoolean("logueado", false)) {
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
+            return
+        }
+
+        val rol = prefs.getString("rol", "ALMACENERO") ?: "ALMACENERO"
+        val nombre = prefs.getString("nombre", "") ?: ""
+
         enableEdgeToEdge()
         setContentView(R.layout.activity_main)
 
@@ -49,12 +62,21 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
+        val tvBienvenido = findViewById<TextView>(R.id.tvBienvenido)
+        tvBienvenido.text = "Bienvenido, $nombre"
+
         val btnNuevo = findViewById<MaterialButton>(R.id.btnNuevoProducto)
         val btnVer = findViewById<MaterialButton>(R.id.btnVerProductos)
         val btnCategorias = findViewById<MaterialButton>(R.id.btnGestionarCategorias)
         val btnProveedores = findViewById<MaterialButton>(R.id.btnGestionarProveedores)
         val btnSync = findViewById<MaterialButton>(R.id.btnSincronizar)
         val btnFirebase = findViewById<MaterialButton>(R.id.btnFirebase)
+        val btnCerrarSesion = findViewById<MaterialButton>(R.id.btnCerrarSesion)
+
+        val esAdmin = rol == "ADMINISTRADOR"
+        btnCategorias.visibility = if (esAdmin) View.VISIBLE else View.GONE
+        btnProveedores.visibility = if (esAdmin) View.VISIBLE else View.GONE
+        btnFirebase.visibility = if (esAdmin) View.VISIBLE else View.GONE
 
         btnNuevo.setOnClickListener {
             startActivity(Intent(this, NuevoProductoActivity::class.java))
@@ -78,6 +100,14 @@ class MainActivity : AppCompatActivity() {
 
         btnFirebase.setOnClickListener {
             startActivity(Intent(this, ListaFirebaseActivity::class.java))
+        }
+
+        btnCerrarSesion.setOnClickListener {
+            val editor = prefs.edit()
+            editor.clear()
+            editor.apply()
+            startActivity(Intent(this, LoginActivity::class.java))
+            finish()
         }
     }
 
