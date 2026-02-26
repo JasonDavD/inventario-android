@@ -23,7 +23,7 @@ class ControllerProveedor {
     fun listar(): ArrayList<Proveedor> {
         val lista = ArrayList<Proveedor>()
         val db = AppConfig.BD.readableDatabase
-        val cursor = db.rawQuery("SELECT * FROM tb_proveedor", null)
+        val cursor = db.rawQuery("SELECT * FROM tb_proveedor WHERE estado_sync != 2", null)
         while (cursor.moveToNext()) {
             lista.add(Proveedor(
                 cod = cursor.getInt(0),
@@ -133,5 +133,38 @@ class ControllerProveedor {
         val resultado = db.update("tb_proveedor", valores, "cod=?", arrayOf(cod.toString()))
         db.close()
         return resultado
+    }
+
+    fun marcarParaBorrar(cod: Int, idApi: Int): Int {
+        val db = AppConfig.BD.writableDatabase
+        return if (idApi == 0) {
+            val resultado = db.delete("tb_proveedor", "cod=?", arrayOf(cod.toString()))
+            db.close()
+            resultado
+        } else {
+            val valores = ContentValues().apply { put("estado_sync", 2) }
+            val resultado = db.update("tb_proveedor", valores, "cod=?", arrayOf(cod.toString()))
+            db.close()
+            resultado
+        }
+    }
+
+    fun listarPendientesBorrar(): ArrayList<Proveedor> {
+        val lista = ArrayList<Proveedor>()
+        val db = AppConfig.BD.readableDatabase
+        val cursor = db.rawQuery("SELECT * FROM tb_proveedor WHERE estado_sync = 2", null)
+        while (cursor.moveToNext()) {
+            lista.add(Proveedor(
+                cod = cursor.getInt(0),
+                nombre = cursor.getString(1),
+                telefono = cursor.getString(2) ?: "",
+                direccion = cursor.getString(3) ?: "",
+                estadoSync = cursor.getInt(4),
+                idApi = cursor.getInt(5)
+            ))
+        }
+        cursor.close()
+        db.close()
+        return lista
     }
 }

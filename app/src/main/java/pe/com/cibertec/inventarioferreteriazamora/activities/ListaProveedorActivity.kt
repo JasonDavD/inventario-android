@@ -16,10 +16,6 @@ import com.google.firebase.database.FirebaseDatabase
 import pe.com.cibertec.inventarioferreteriazamora.R
 import pe.com.cibertec.inventarioferreteriazamora.adaptador.ProveedorAdapter
 import pe.com.cibertec.inventarioferreteriazamora.controller.ControllerProveedor
-import pe.com.cibertec.inventarioferreteriazamora.utils.ApiUtils
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 class ListaProveedorActivity : AppCompatActivity() {
 
@@ -64,23 +60,13 @@ class ListaProveedorActivity : AppCompatActivity() {
                     .setTitle("Eliminar proveedor")
                     .setMessage("¿Esta seguro de eliminar '${proveedor.nombre}'?")
                     .setPositiveButton("Eliminar") { _, _ ->
-                        val resultado = controller.eliminar(proveedor.cod)
-                        if (resultado > 0) {
-                            bd.child("proveedores").child(proveedor.cod.toString()).removeValue()
-                            // Eliminar en el API si tiene idApi
-                            if (proveedor.idApi > 0) {
-                                ApiUtils.getAPIProveedor().eliminarProveedor(proveedor.idApi)
-                                    .enqueue(object : Callback<Void> {
-                                        override fun onResponse(call: Call<Void>, response: Response<Void>) {}
-                                        override fun onFailure(call: Call<Void>, t: Throwable) {}
-                                    })
-                                bd.child("proveedores").child(proveedor.idApi.toString()).removeValue()
-                            }
-                            showAlert("Proveedor eliminado")
-                            cargarProveedores()
-                        } else {
-                            showAlert("Error al eliminar")
+                        controller.marcarParaBorrar(proveedor.cod, proveedor.idApi)
+                        bd.child("proveedores").child(proveedor.cod.toString()).removeValue()
+                        if (proveedor.idApi > 0) {
+                            bd.child("proveedores").child(proveedor.idApi.toString()).removeValue()
                         }
+                        showAlert("Proveedor eliminado")
+                        cargarProveedores()
                     }
                     .setNegativeButton("Cancelar", null)
                     .show()

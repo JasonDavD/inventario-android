@@ -22,7 +22,7 @@ class ControllerCategoria {
     fun listar(): ArrayList<Categoria> {
         val lista = ArrayList<Categoria>()
         val db = AppConfig.BD.readableDatabase
-        val cursor = db.rawQuery("SELECT * FROM tb_categoria", null)
+        val cursor = db.rawQuery("SELECT * FROM tb_categoria WHERE estado_sync != 2", null)
         while (cursor.moveToNext()) {
             lista.add(Categoria(
                 cod = cursor.getInt(0),
@@ -126,5 +126,37 @@ class ControllerCategoria {
         val resultado = db.update("tb_categoria", valores, "cod=?", arrayOf(cod.toString()))
         db.close()
         return resultado
+    }
+
+    fun marcarParaBorrar(cod: Int, idApi: Int): Int {
+        val db = AppConfig.BD.writableDatabase
+        return if (idApi == 0) {
+            val resultado = db.delete("tb_categoria", "cod=?", arrayOf(cod.toString()))
+            db.close()
+            resultado
+        } else {
+            val valores = ContentValues().apply { put("estado_sync", 2) }
+            val resultado = db.update("tb_categoria", valores, "cod=?", arrayOf(cod.toString()))
+            db.close()
+            resultado
+        }
+    }
+
+    fun listarPendientesBorrar(): ArrayList<Categoria> {
+        val lista = ArrayList<Categoria>()
+        val db = AppConfig.BD.readableDatabase
+        val cursor = db.rawQuery("SELECT * FROM tb_categoria WHERE estado_sync = 2", null)
+        while (cursor.moveToNext()) {
+            lista.add(Categoria(
+                cod = cursor.getInt(0),
+                nombre = cursor.getString(1),
+                descripcion = cursor.getString(2) ?: "",
+                estadoSync = cursor.getInt(3),
+                idApi = cursor.getInt(4)
+            ))
+        }
+        cursor.close()
+        db.close()
+        return lista
     }
 }

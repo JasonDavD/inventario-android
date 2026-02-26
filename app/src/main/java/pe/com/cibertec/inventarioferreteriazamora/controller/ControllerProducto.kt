@@ -28,7 +28,7 @@ class ControllerProducto {
     fun listar(): ArrayList<Producto> {
         val lista = ArrayList<Producto>()
         val db = AppConfig.BD.readableDatabase
-        val cursor = db.rawQuery("SELECT * FROM tb_producto", null)
+        val cursor = db.rawQuery("SELECT * FROM tb_producto WHERE estado_sync != 2", null)
         while (cursor.moveToNext()) {
             val producto = Producto(
                 cod = cursor.getInt(0),
@@ -153,6 +153,44 @@ class ControllerProducto {
         val resultado = db.insert("tb_producto", null, valores)
         db.close()
         return resultado
+    }
+
+    fun marcarParaBorrar(cod: Int, idApi: Int): Int {
+        val db = AppConfig.BD.writableDatabase
+        return if (idApi == 0) {
+            val resultado = db.delete("tb_producto", "cod=?", arrayOf(cod.toString()))
+            db.close()
+            resultado
+        } else {
+            val valores = ContentValues().apply { put("estado_sync", 2) }
+            val resultado = db.update("tb_producto", valores, "cod=?", arrayOf(cod.toString()))
+            db.close()
+            resultado
+        }
+    }
+
+    fun listarPendientesBorrar(): ArrayList<Producto> {
+        val lista = ArrayList<Producto>()
+        val db = AppConfig.BD.readableDatabase
+        val cursor = db.rawQuery("SELECT * FROM tb_producto WHERE estado_sync = 2", null)
+        while (cursor.moveToNext()) {
+            val producto = Producto(
+                cod = cursor.getInt(0),
+                nombre = cursor.getString(1),
+                precio = cursor.getDouble(3),
+                stock = cursor.getInt(4),
+                estadoSync = cursor.getInt(5),
+                idApi = cursor.getInt(6),
+                categoriaId = cursor.getInt(7),
+                categoriaNombre = cursor.getString(8) ?: "",
+                proveedorId = cursor.getInt(9),
+                proveedorNombre = cursor.getString(10) ?: ""
+            )
+            lista.add(producto)
+        }
+        cursor.close()
+        db.close()
+        return lista
     }
 
     fun actualizarDesdeApi(producto: Producto): Int {

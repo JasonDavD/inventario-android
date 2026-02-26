@@ -11,10 +11,6 @@ import com.google.firebase.database.FirebaseDatabase
 import pe.com.cibertec.inventarioferreteriazamora.R
 import pe.com.cibertec.inventarioferreteriazamora.controller.ControllerProveedor
 import pe.com.cibertec.inventarioferreteriazamora.modelos.Proveedor
-import pe.com.cibertec.inventarioferreteriazamora.utils.ApiUtils
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 class EditarProveedorActivity : AppCompatActivity() {
 
@@ -68,32 +64,9 @@ class EditarProveedorActivity : AppCompatActivity() {
 
         val resultado = controller.actualizar(proveedor)
         if (resultado > 0) {
-            // Actualizar Firebase
             bd.child("proveedores").child(proveedor.cod.toString()).setValue(proveedor)
-
-            // Llamar al API si ya tiene idApi
-            if (proveedor.idApi > 0) {
-                ApiUtils.getAPIProveedor().actualizarProveedor(proveedor.idApi, proveedor)
-                    .enqueue(object : Callback<Proveedor> {
-                        override fun onResponse(call: Call<Proveedor>, response: Response<Proveedor>) {
-                            if (response.isSuccessful) {
-                                controller.marcarSincronizado(proveedor.cod, proveedor.idApi)
-                                val provSync = proveedor.copy(estadoSync = 1)
-                                bd.child("proveedores").child(proveedor.idApi.toString()).setValue(provSync)
-                            }
-                            showAlert("Proveedor actualizado")
-                            finish()
-                        }
-
-                        override fun onFailure(call: Call<Proveedor>, t: Throwable) {
-                            showAlert("Actualizado localmente. Se sincronizará luego.")
-                            finish()
-                        }
-                    })
-            } else {
-                showAlert("Proveedor actualizado")
-                finish()
-            }
+            showAlert("Proveedor actualizado")
+            finish()
         } else {
             showAlert("Error al actualizar")
         }

@@ -11,10 +11,6 @@ import com.google.firebase.database.FirebaseDatabase
 import pe.com.cibertec.inventarioferreteriazamora.R
 import pe.com.cibertec.inventarioferreteriazamora.controller.ControllerProveedor
 import pe.com.cibertec.inventarioferreteriazamora.modelos.Proveedor
-import pe.com.cibertec.inventarioferreteriazamora.utils.ApiUtils
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 class NuevoProveedorActivity : AppCompatActivity() {
 
@@ -60,31 +56,9 @@ class NuevoProveedorActivity : AppCompatActivity() {
         if (resultado > 0) {
             val cod = resultado.toInt()
             val provLocal = proveedor.copy(cod = cod)
-            // Guardar en Firebase con clave local (temporal)
             bd.child("proveedores").child(cod.toString()).setValue(provLocal)
-
-            // Llamar al API para crear en el backend
-            ApiUtils.getAPIProveedor().crearProveedor(provLocal).enqueue(object : Callback<Proveedor> {
-                override fun onResponse(call: Call<Proveedor>, response: Response<Proveedor>) {
-                    if (response.isSuccessful) {
-                        val apiId = response.body()?.idApi ?: 0
-                        if (apiId > 0) {
-                            controller.marcarSincronizado(cod, apiId)
-                            // Reemplazar nodo Firebase con clave real del API
-                            bd.child("proveedores").child(cod.toString()).removeValue()
-                            val provSync = provLocal.copy(idApi = apiId, estadoSync = 1)
-                            bd.child("proveedores").child(apiId.toString()).setValue(provSync)
-                        }
-                    }
-                    showAlert("Proveedor guardado")
-                    finish()
-                }
-
-                override fun onFailure(call: Call<Proveedor>, t: Throwable) {
-                    showAlert("Guardado localmente. Se sincronizará luego.")
-                    finish()
-                }
-            })
+            showAlert("Proveedor guardado")
+            finish()
         } else {
             showAlert("Error al guardar")
         }

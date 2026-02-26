@@ -16,10 +16,6 @@ import com.google.firebase.database.FirebaseDatabase
 import pe.com.cibertec.inventarioferreteriazamora.R
 import pe.com.cibertec.inventarioferreteriazamora.adaptador.CategoriaAdapter
 import pe.com.cibertec.inventarioferreteriazamora.controller.ControllerCategoria
-import pe.com.cibertec.inventarioferreteriazamora.utils.ApiUtils
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 class ListaCategoriaActivity : AppCompatActivity() {
 
@@ -63,23 +59,13 @@ class ListaCategoriaActivity : AppCompatActivity() {
                     .setTitle("Eliminar categoria")
                     .setMessage("¿Esta seguro de eliminar '${categoria.nombre}'?")
                     .setPositiveButton("Eliminar") { _, _ ->
-                        val resultado = controller.eliminar(categoria.cod)
-                        if (resultado > 0) {
-                            bd.child("categorias").child(categoria.cod.toString()).removeValue()
-                            // Eliminar en el API si tiene idApi
-                            if (categoria.idApi > 0) {
-                                ApiUtils.getAPICategoria().eliminarCategoria(categoria.idApi)
-                                    .enqueue(object : Callback<Void> {
-                                        override fun onResponse(call: Call<Void>, response: Response<Void>) {}
-                                        override fun onFailure(call: Call<Void>, t: Throwable) {}
-                                    })
-                                bd.child("categorias").child(categoria.idApi.toString()).removeValue()
-                            }
-                            showAlert("Categoria eliminada")
-                            cargarCategorias()
-                        } else {
-                            showAlert("Error al eliminar")
+                        controller.marcarParaBorrar(categoria.cod, categoria.idApi)
+                        bd.child("categorias").child(categoria.cod.toString()).removeValue()
+                        if (categoria.idApi > 0) {
+                            bd.child("categorias").child(categoria.idApi.toString()).removeValue()
                         }
+                        showAlert("Categoria eliminada")
+                        cargarCategorias()
                     }
                     .setNegativeButton("Cancelar", null)
                     .show()

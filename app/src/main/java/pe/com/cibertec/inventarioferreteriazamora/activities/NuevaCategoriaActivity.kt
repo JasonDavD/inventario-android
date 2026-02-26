@@ -11,10 +11,6 @@ import com.google.firebase.database.FirebaseDatabase
 import pe.com.cibertec.inventarioferreteriazamora.R
 import pe.com.cibertec.inventarioferreteriazamora.controller.ControllerCategoria
 import pe.com.cibertec.inventarioferreteriazamora.modelos.Categoria
-import pe.com.cibertec.inventarioferreteriazamora.utils.ApiUtils
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 
 class NuevaCategoriaActivity : AppCompatActivity() {
 
@@ -57,31 +53,9 @@ class NuevaCategoriaActivity : AppCompatActivity() {
         if (resultado > 0) {
             val cod = resultado.toInt()
             val catLocal = categoria.copy(cod = cod)
-            // Guardar en Firebase con clave local (temporal)
             bd.child("categorias").child(cod.toString()).setValue(catLocal)
-
-            // Llamar al API para crear en el backend
-            ApiUtils.getAPICategoria().crearCategoria(catLocal).enqueue(object : Callback<Categoria> {
-                override fun onResponse(call: Call<Categoria>, response: Response<Categoria>) {
-                    if (response.isSuccessful) {
-                        val apiId = response.body()?.idApi ?: 0
-                        if (apiId > 0) {
-                            controller.marcarSincronizado(cod, apiId)
-                            // Reemplazar nodo Firebase con clave real del API
-                            bd.child("categorias").child(cod.toString()).removeValue()
-                            val catSync = catLocal.copy(idApi = apiId, estadoSync = 1)
-                            bd.child("categorias").child(apiId.toString()).setValue(catSync)
-                        }
-                    }
-                    showAlert("Categoria guardada")
-                    finish()
-                }
-
-                override fun onFailure(call: Call<Categoria>, t: Throwable) {
-                    showAlert("Guardada localmente. Se sincronizará luego.")
-                    finish()
-                }
-            })
+            showAlert("Categoria guardada")
+            finish()
         } else {
             showAlert("Error al guardar")
         }

@@ -56,14 +56,10 @@ class ListaProductoActivity : AppCompatActivity() {
                     .setTitle("Eliminar producto")
                     .setMessage("¿Esta seguro de eliminar '${producto.nombre}'?")
                     .setPositiveButton("Eliminar") { _, _ ->
-                        val resultado = controller.eliminar(producto.cod)
-                        if (resultado > 0) {
-                            bd.child("productos").child(producto.cod.toString()).removeValue()
-                            showAlert("Producto eliminado")
-                            cargarProductos()
-                        } else {
-                            showAlert("Error al eliminar")
-                        }
+                        controller.marcarParaBorrar(producto.cod, producto.idApi)
+                        bd.child("productos").child(producto.cod.toString()).removeValue()
+                        showAlert("Producto eliminado")
+                        cargarProductos()
                     }
                     .setNegativeButton("Cancelar", null)
                     .show()

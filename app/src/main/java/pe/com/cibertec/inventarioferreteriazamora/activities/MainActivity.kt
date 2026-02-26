@@ -88,20 +88,107 @@ class MainActivity : AppCompatActivity() {
         val apiProv = ApiUtils.getAPIProveedor()
         val apiProd = ApiUtils.getAPIProducto()
 
-        // Flujo encadenado bidireccional:
-        // subir pendientes categoria → subir pendientes proveedor →
-        // descargar categorias → descargar proveedores →
-        // subir pendientes productos → descargar productos
-        subirPendientesCategorias(apiCat) {
-            subirPendientesProveedores(apiProv) {
-                descargarCategorias(apiCat) {
-                    descargarProveedores(apiProv) {
-                        subirPendientesProductos(apiProd) {
-                            descargarProductos(apiProd)
+        // Flujo encadenado: borrar pendientes primero, luego subir y descargar
+        borrarPendientesCategoria(apiCat) {
+            borrarPendientesProveedor(apiProv) {
+                borrarPendientesProducto(apiProd) {
+                    subirPendientesCategorias(apiCat) {
+                        subirPendientesProveedores(apiProv) {
+                            descargarCategorias(apiCat) {
+                                descargarProveedores(apiProv) {
+                                    subirPendientesProductos(apiProd) {
+                                        descargarProductos(apiProd)
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
+        }
+    }
+
+    private fun borrarPendientesCategoria(api: ApiCategoria, onComplete: () -> Unit) {
+        val pendientes = controllerCategoria.listarPendientesBorrar()
+
+        if (pendientes.isEmpty()) {
+            onComplete()
+            return
+        }
+
+        var procesados = 0
+
+        for (categoria in pendientes) {
+            api.eliminarCategoria(categoria.idApi).enqueue(object : Callback<Void> {
+                override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                    if (response.isSuccessful) {
+                        controllerCategoria.eliminar(categoria.cod)
+                    }
+                    procesados++
+                    if (procesados == pendientes.size) onComplete()
+                }
+
+                override fun onFailure(call: Call<Void>, t: Throwable) {
+                    procesados++
+                    if (procesados == pendientes.size) onComplete()
+                }
+            })
+        }
+    }
+
+    private fun borrarPendientesProveedor(api: ApiProveedor, onComplete: () -> Unit) {
+        val pendientes = controllerProveedor.listarPendientesBorrar()
+
+        if (pendientes.isEmpty()) {
+            onComplete()
+            return
+        }
+
+        var procesados = 0
+
+        for (proveedor in pendientes) {
+            api.eliminarProveedor(proveedor.idApi).enqueue(object : Callback<Void> {
+                override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                    if (response.isSuccessful) {
+                        controllerProveedor.eliminar(proveedor.cod)
+                    }
+                    procesados++
+                    if (procesados == pendientes.size) onComplete()
+                }
+
+                override fun onFailure(call: Call<Void>, t: Throwable) {
+                    procesados++
+                    if (procesados == pendientes.size) onComplete()
+                }
+            })
+        }
+    }
+
+    private fun borrarPendientesProducto(api: ApiProducto, onComplete: () -> Unit) {
+        val pendientes = controllerProducto.listarPendientesBorrar()
+
+        if (pendientes.isEmpty()) {
+            onComplete()
+            return
+        }
+
+        var procesados = 0
+
+        for (producto in pendientes) {
+            api.eliminarProducto(producto.idApi).enqueue(object : Callback<Void> {
+                override fun onResponse(call: Call<Void>, response: Response<Void>) {
+                    if (response.isSuccessful) {
+                        controllerProducto.eliminar(producto.cod)
+                    }
+                    procesados++
+                    if (procesados == pendientes.size) onComplete()
+                }
+
+                override fun onFailure(call: Call<Void>, t: Throwable) {
+                    procesados++
+                    if (procesados == pendientes.size) onComplete()
+                }
+            })
         }
     }
 
