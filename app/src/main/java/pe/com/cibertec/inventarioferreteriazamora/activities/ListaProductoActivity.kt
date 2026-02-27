@@ -57,6 +57,7 @@ class ListaProductoActivity : AppCompatActivity() {
                     .setMessage("¿Esta seguro de eliminar '${producto.nombre}'?")
                     .setPositiveButton("Eliminar") { _, _ ->
                         controller.marcarParaBorrar(producto.cod, producto.idApi)
+                        //Nodos
                         bd.child("productos").child(producto.cod.toString()).removeValue()
                         showAlert("Producto eliminado")
                         cargarProductos()

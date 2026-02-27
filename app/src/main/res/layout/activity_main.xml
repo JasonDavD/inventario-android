@@ -127,16 +127,6 @@
                         app:cornerRadius="12dp" />
 
                     <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnFirebase"
-                        android:layout_width="match_parent"
-                        android:layout_height="56dp"
-                        android:text="Ver Firebase"
-                        android:textSize="16sp"
-                        android:layout_marginBottom="12dp"
-                        style="@style/Widget.Material3.Button.OutlinedButton"
-                        app:cornerRadius="12dp" />
-
-                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnCerrarSesion"
                         android:layout_width="match_parent"
                         android:layout_height="56dp"

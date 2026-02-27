@@ -14,8 +14,7 @@
         android:layout_height="?attr/actionBarSize"
         android:background="?attr/colorPrimary"
         app:title="Editar Producto"
-        app:titleTextColor="@color/white"
-        app:navigationIcon="@drawable/ic_launcher_foreground" />
+        app:titleTextColor="@color/white" />
 
     <ScrollView
         android:layout_width="match_parent"

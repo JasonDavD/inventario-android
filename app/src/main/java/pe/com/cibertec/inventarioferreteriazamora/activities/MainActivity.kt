@@ -70,13 +70,13 @@ class MainActivity : AppCompatActivity() {
         val btnCategorias = findViewById<MaterialButton>(R.id.btnGestionarCategorias)
         val btnProveedores = findViewById<MaterialButton>(R.id.btnGestionarProveedores)
         val btnSync = findViewById<MaterialButton>(R.id.btnSincronizar)
-        val btnFirebase = findViewById<MaterialButton>(R.id.btnFirebase)
+        //val btnFirebase = findViewById<MaterialButton>(R.id.btnFirebase)
         val btnCerrarSesion = findViewById<MaterialButton>(R.id.btnCerrarSesion)
 
         val esAdmin = rol == "ADMINISTRADOR"
         btnCategorias.visibility = if (esAdmin) View.VISIBLE else View.GONE
         btnProveedores.visibility = if (esAdmin) View.VISIBLE else View.GONE
-        btnFirebase.visibility = if (esAdmin) View.VISIBLE else View.GONE
+        //btnFirebase.visibility = if (esAdmin) View.VISIBLE else View.GONE
 
         btnNuevo.setOnClickListener {
             startActivity(Intent(this, NuevoProductoActivity::class.java))
@@ -98,9 +98,11 @@ class MainActivity : AppCompatActivity() {
             sincronizar()
         }
 
+        /*
         btnFirebase.setOnClickListener {
             startActivity(Intent(this, ListaFirebaseActivity::class.java))
         }
+        */
 
         btnCerrarSesion.setOnClickListener {
             val editor = prefs.edit()
